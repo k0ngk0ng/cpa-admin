@@ -1,0 +1,843 @@
+/**
+ * 布局样式 - 重新设计版
+ * 现代、精致、有品味的管理后台布局
+ */
+
+@use './variables.scss' as *;
+@use './mixins.scss' as *;
+
+:root {
+  --header-height: 64px;
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 72px;
+}
+
+// ============================================
+// 应用外壳
+// ============================================
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-base);
+  color: var(--text-primary);
+
+  @media (max-width: $breakpoint-mobile) {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+    overflow-y: auto;
+  }
+}
+
+// ============================================
+// 头部导航 - 毛玻璃效果
+// ============================================
+.main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-lg;
+  height: var(--header-height);
+  padding: 0 $spacing-xl;
+  background: var(--header-bg);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid var(--header-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (max-width: $breakpoint-mobile) {
+    position: fixed;
+    left: 0;
+    right: 0;
+    height: 56px;
+    padding: 0 $spacing-md;
+    gap: $spacing-sm;
+  }
+
+  .left {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+
+  .right {
+    display: flex;
+    align-items: center;
+    gap: $spacing-lg;
+    min-width: 0;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+
+    @media (max-width: $breakpoint-mobile) {
+      flex: 0 1 auto;
+      gap: $spacing-sm;
+    }
+  }
+
+  .sidebar-toggle-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    border-radius: $radius-md;
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: all $transition-fast;
+    flex-shrink: 0;
+
+    &:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    &:active {
+      transform: scale(0.92);
+    }
+
+    @media (max-width: $breakpoint-mobile) {
+      display: none;
+    }
+  }
+
+  .brand-logo {
+    height: 38px;
+    width: 38px;
+    object-fit: contain;
+    flex-shrink: 0;
+    border-radius: $radius-md;
+    box-shadow: $shadow-sm;
+    transition: transform $transition-fast;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+
+  .brand-header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--text-primary);
+    margin-right: $spacing-md;
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: -0.01em;
+
+    .brand-full {
+      display: inline-block;
+      max-width: 320px;
+      opacity: 1;
+      transform: translateX(0);
+      transition: max-width 0.4s ease, opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .brand-abbr {
+      display: inline-block;
+      transform: translateX(12px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    &.collapsed {
+      .brand-full {
+        max-width: 0;
+        opacity: 0;
+        transform: translateX(-12px);
+      }
+
+      .brand-abbr {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
+
+    &:hover {
+      color: var(--primary-color);
+    }
+
+    @media (max-width: $breakpoint-mobile) {
+      cursor: default;
+      flex-shrink: 1;
+      min-width: 0;
+      margin-right: 0;
+
+      .brand-full,
+      .brand-abbr {
+        transition: none;
+      }
+
+      .brand-full {
+        display: none;
+      }
+
+      .brand-abbr {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      &:hover {
+        color: var(--text-primary);
+      }
+    }
+  }
+
+  .mobile-menu-btn {
+    display: none;
+    flex-shrink: 0;
+
+    @media (max-width: $breakpoint-mobile) {
+      display: inline-flex;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+
+    svg {
+      display: block;
+    }
+
+    .btn {
+      border-radius: $radius-md;
+    }
+  }
+
+  .connection {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: 6px $spacing-md;
+    background: var(--bg-secondary);
+    border-radius: $radius-full;
+    color: var(--text-secondary);
+    min-width: 0;
+    flex-shrink: 1;
+    overflow: hidden;
+
+    .status-badge {
+      flex-shrink: 0;
+      white-space: nowrap;
+      margin-bottom: 0;
+    }
+
+    .base {
+      font-weight: 500;
+      font-size: $font-sm;
+      color: var(--text-secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 80px;
+      max-width: 180px;
+    }
+
+    @media (max-width: $breakpoint-tablet) {
+      display: none;
+    }
+  }
+}
+
+// ============================================
+// 主体区域
+// ============================================
+.main-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  height: calc(100vh - var(--header-height));
+  overflow: hidden;
+  position: relative;
+
+  @supports (height: 100dvh) {
+    height: calc(100dvh - var(--header-height));
+  }
+
+  @media (max-width: $breakpoint-mobile) {
+    height: auto;
+    min-height: calc(100vh - 56px);
+    overflow: visible;
+    padding-top: 56px;
+
+    @supports (min-height: 100dvh) {
+      min-height: calc(100dvh - 56px);
+    }
+  }
+}
+
+// ============================================
+// 侧边栏 - 优雅的导航
+// ============================================
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  padding: $spacing-lg $spacing-md;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+  transition: width $transition-normal, transform $transition-normal, padding $transition-normal;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex-shrink: 0;
+  height: 100%;
+
+  // 自定义滚动条
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: $radius-full;
+
+    &:hover {
+      background: var(--scrollbar-thumb-hover);
+    }
+  }
+
+  &.collapsed {
+    width: var(--sidebar-collapsed-width);
+    padding: $spacing-lg $spacing-sm;
+
+    .nav-item {
+      justify-content: center;
+      padding: $spacing-sm;
+
+      .nav-label {
+        opacity: 0;
+        width: 0;
+        overflow: hidden;
+        margin-left: 0;
+      }
+    }
+  }
+
+  .nav-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .nav-item {
+    position: relative;
+    padding: 11px 14px;
+    border-radius: $radius-md;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: $font-base;
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    cursor: pointer;
+    transition: all $transition-fast;
+    text-decoration: none;
+    overflow: hidden;
+
+    // 左侧指示条
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 0;
+      background: var(--primary-color);
+      border-radius: 0 $radius-full $radius-full 0;
+      transition: height $transition-fast;
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: color $transition-fast, transform $transition-fast;
+
+      svg {
+        width: 18px;
+        height: 18px;
+        display: block;
+      }
+    }
+
+    .nav-label {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: opacity $transition-fast, width $transition-fast, margin $transition-fast;
+    }
+
+    &:hover {
+      background: var(--sidebar-item-hover);
+      color: var(--text-primary);
+
+      .nav-icon {
+        transform: scale(1.1);
+      }
+    }
+
+    &.active {
+      background: var(--sidebar-item-active);
+      color: var(--primary-color);
+      font-weight: 600;
+
+      &::before {
+        height: 20px;
+      }
+
+      .nav-icon {
+        color: var(--primary-color);
+      }
+    }
+  }
+
+  @media (max-width: $breakpoint-mobile) {
+    position: fixed;
+    z-index: 200;
+    left: 0;
+    top: 56px;
+    bottom: 0;
+    width: 280px;
+    transform: translateX(-100%);
+    box-shadow: $shadow-xl;
+    padding: $spacing-md;
+
+    &.open {
+      transform: translateX(0);
+    }
+
+    &.collapsed {
+      width: 280px;
+      padding: $spacing-md;
+
+      .nav-item {
+        justify-content: flex-start;
+        padding: 11px 14px;
+
+        .nav-label {
+          opacity: 1;
+          width: auto;
+          margin-left: 0;
+        }
+      }
+    }
+  }
+}
+
+// ============================================
+// 内容区域
+// ============================================
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  height: 100%;
+  background: var(--bg-base);
+
+  // 自定义滚动条
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: $radius-full;
+
+    &:hover {
+      background: var(--scrollbar-thumb-hover);
+    }
+  }
+
+  &.content-logs {
+    overflow: hidden;
+
+    @media (max-width: $breakpoint-mobile) {
+      overflow: visible;
+      overflow-y: auto;
+      height: auto;
+    }
+  }
+}
+
+.main-content {
+  flex: 1 0 auto;
+  padding: $spacing-xl $spacing-2xl;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xl;
+  overflow-x: hidden;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+
+  &.main-content-logs {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    max-width: none;
+
+    @media (max-width: $breakpoint-mobile) {
+      flex: 0 0 auto;
+      min-height: auto;
+      overflow: visible;
+    }
+  }
+
+  @media (max-width: $breakpoint-tablet) {
+    padding: $spacing-lg;
+  }
+
+  @media (max-width: $breakpoint-mobile) {
+    padding: $spacing-md;
+    gap: $spacing-lg;
+  }
+}
+
+// ============================================
+// 页脚
+// ============================================
+.footer {
+  padding: $spacing-md $spacing-xl;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-tertiary);
+  font-size: $font-xs;
+  flex-wrap: wrap;
+  gap: $spacing-lg;
+
+  @media (max-width: $breakpoint-mobile) {
+    padding: $spacing-sm $spacing-md;
+    gap: $spacing-sm;
+    flex-direction: column;
+  }
+
+  .footer-version {
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: pointer;
+    transition: color $transition-fast;
+
+    &:hover {
+      color: var(--text-secondary);
+    }
+  }
+}
+
+// ============================================
+// 状态徽章
+// ============================================
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: $radius-full;
+  font-size: $font-xs;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid transparent;
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &.success {
+    background: var(--success-badge-bg);
+    color: var(--success-badge-text);
+    border-color: var(--success-badge-border);
+
+    &::before {
+      background: var(--success-color);
+      animation: pulse 2s infinite;
+    }
+  }
+
+  &.warning {
+    background: var(--warning-badge-bg);
+    color: var(--warning-badge-text);
+    border-color: var(--warning-badge-border);
+
+    &::before {
+      background: var(--warning-color);
+      animation: pulse 1.5s infinite;
+    }
+  }
+
+  &.error {
+    background: var(--failure-badge-bg);
+    color: var(--failure-badge-text);
+    border-color: var(--failure-badge-border);
+
+    &::before {
+      background: var(--error-color);
+    }
+  }
+
+  &.muted {
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+
+    &::before {
+      background: var(--text-muted);
+    }
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.9);
+  }
+}
+
+// ============================================
+// 登录页面 - 优雅的登录体验
+// ============================================
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-base);
+  padding: $spacing-xl;
+  position: relative;
+  overflow: hidden;
+
+  // 背景装饰
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+      circle at 30% 20%,
+      rgba(99, 102, 241, 0.08) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 70% 80%,
+      rgba(139, 92, 246, 0.06) 0%,
+      transparent 50%
+    );
+    pointer-events: none;
+  }
+
+  .login-card {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: $radius-xl;
+    box-shadow: var(--shadow-lg);
+    padding: $spacing-2xl;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-lg;
+
+    @media (max-width: $breakpoint-mobile) {
+      padding: $spacing-xl;
+      border-radius: $radius-lg;
+    }
+  }
+
+  .login-header {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+    text-align: center;
+
+    .title {
+      font-size: $font-2xl;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: $font-base;
+    }
+  }
+
+  .login-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-sm;
+    flex-wrap: wrap;
+  }
+
+  .login-language-btn {
+    white-space: nowrap;
+  }
+
+  .connection-box {
+    background: var(--bg-secondary);
+    border: 1px dashed var(--border-color);
+    border-radius: $radius-md;
+    padding: $spacing-md;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+
+    .label {
+      color: var(--text-tertiary);
+      font-size: $font-sm;
+    }
+
+    .value {
+      font-weight: 600;
+      color: var(--text-primary);
+      word-break: break-all;
+    }
+
+    .hint {
+      font-size: $font-xs;
+      color: var(--text-tertiary);
+    }
+  }
+
+  .toggle-advanced {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: $spacing-sm;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: $font-sm;
+
+    input[type='checkbox'] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--primary-color);
+      cursor: pointer;
+    }
+
+    label {
+      cursor: pointer;
+    }
+  }
+
+  .error-box {
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
+    border-radius: $radius-md;
+    padding: $spacing-sm $spacing-md;
+    color: var(--error-color);
+    font-size: $font-sm;
+  }
+}
+
+// ============================================
+// 网格布局
+// ============================================
+.grid {
+  display: grid;
+  gap: $spacing-lg;
+}
+
+@media (min-width: $breakpoint-tablet) {
+  .grid.cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid.cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .grid.cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+// ============================================
+// Request Log Modal
+// ============================================
+.request-log-modal {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+
+  .status-badge {
+    align-self: flex-start;
+  }
+}
+
+// ============================================
+// 移动端侧边栏遮罩
+// ============================================
+.sidebar-overlay {
+  display: none;
+
+  @media (max-width: $breakpoint-mobile) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    top: 56px;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 199;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity $transition-normal, visibility $transition-normal;
+
+    &.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+}
