@@ -82,7 +82,7 @@ export function AboutPage() {
           <p className={styles.sectionDescription}>{t('system_info.quick_links_desc')}</p>
           <div className={styles.quickLinks}>
             <a
-              href="https://github.com/router-for-me/CLIProxyAPI"
+              href="https://github.com/router-for-me/CLIProxyAPIPlus"
               target="_blank"
               rel="noopener noreferrer"
               className={styles.linkCard}
@@ -100,7 +100,7 @@ export function AboutPage() {
             </a>
 
             <a
-              href="https://github.com/k0ngk0ng/Cli-Proxy-API-Management-Center"
+              href="https://github.com/k0ngk0ng/cpa-admin"
               target="_blank"
               rel="noopener noreferrer"
               className={styles.linkCard}
