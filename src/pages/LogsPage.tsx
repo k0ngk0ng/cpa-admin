@@ -655,7 +655,7 @@ export function LogsPage() {
 
       // 处理 Auth Files
       const files = authFilesResponse?.files || [];
-      files.forEach((file: any) => {
+      files.forEach((file: any, index: number) => {
         const rawAuthIndex = file['auth_index'] ?? file.authIndex;
         let authIndexKey: string | null = null;
         if (typeof rawAuthIndex === 'number' && Number.isFinite(rawAuthIndex)) {
@@ -665,27 +665,34 @@ export function LogsPage() {
           authIndexKey = trimmed || null;
         }
 
-        if (authIndexKey) {
-          const fileType = (file.type || 'unknown').toString();
-          const fileName = file.name?.replace(/\.json$/i, '') || '';
-          const displayName = file.provider?.trim() || fileName || fileType;
+        // 如果没有 auth_index，使用数组索引作为 key
+        const effectiveAuthIndexKey = authIndexKey || String(index);
 
-          authIdxMap[authIndexKey] = {
-            name: displayName,
-            type: fileType,
-            fileName: fileName,
-          };
+        const fileType = (file.type || 'unknown').toString();
+        const fileName = file.name?.replace(/\.json$/i, '') || '';
+        const displayName = file.provider?.trim() || fileName || fileType;
 
-          // 也把 file.name 加入到 map 和 typeMap
-          if (file.name) {
-            map[file.name] = displayName;
-            typeMap[file.name] = fileType;
-            const nameWithoutExt = file.name.replace(/\.json$/i, '');
-            if (nameWithoutExt !== file.name) {
-              map[nameWithoutExt] = displayName;
-              typeMap[nameWithoutExt] = fileType;
-            }
+        authIdxMap[effectiveAuthIndexKey] = {
+          name: displayName,
+          type: fileType,
+          fileName: fileName,
+        };
+
+        // 把 file.name 加入到 map 和 typeMap（用于 source 匹配）
+        if (file.name) {
+          map[file.name] = displayName;
+          typeMap[file.name] = fileType;
+          const nameWithoutExt = file.name.replace(/\.json$/i, '');
+          if (nameWithoutExt !== file.name) {
+            map[nameWithoutExt] = displayName;
+            typeMap[nameWithoutExt] = fileType;
           }
+        }
+
+        // 也用 fileName（不带扩展名）作为 key
+        if (fileName) {
+          map[fileName] = displayName;
+          typeMap[fileName] = fileType;
         }
       });
 
