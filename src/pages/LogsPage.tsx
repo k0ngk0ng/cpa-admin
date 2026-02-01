@@ -655,12 +655,38 @@ export function LogsPage() {
 
       // 处理 Auth Files
       const files = authFilesResponse?.files || [];
-      files.forEach((file: any, index: number) => {
-        authIdxMap[String(index)] = {
-          name: file.name || file.fileName || `Auth ${index}`,
-          type: file.type || '',
-          fileName: file.fileName || file.name || '',
-        };
+      files.forEach((file: any) => {
+        const rawAuthIndex = file['auth_index'] ?? file.authIndex;
+        let authIndexKey: string | null = null;
+        if (typeof rawAuthIndex === 'number' && Number.isFinite(rawAuthIndex)) {
+          authIndexKey = rawAuthIndex.toString();
+        } else if (typeof rawAuthIndex === 'string') {
+          const trimmed = rawAuthIndex.trim();
+          authIndexKey = trimmed || null;
+        }
+
+        if (authIndexKey) {
+          const fileType = (file.type || 'unknown').toString();
+          const fileName = file.name?.replace(/\.json$/i, '') || '';
+          const displayName = file.provider?.trim() || fileName || fileType;
+
+          authIdxMap[authIndexKey] = {
+            name: displayName,
+            type: fileType,
+            fileName: fileName,
+          };
+
+          // 也把 file.name 加入到 map 和 typeMap
+          if (file.name) {
+            map[file.name] = displayName;
+            typeMap[file.name] = fileType;
+            const nameWithoutExt = file.name.replace(/\.json$/i, '');
+            if (nameWithoutExt !== file.name) {
+              map[nameWithoutExt] = displayName;
+              typeMap[nameWithoutExt] = fileType;
+            }
+          }
+        }
       });
 
       setProviderMap(map);
