@@ -38,10 +38,6 @@ jobs:
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: Rename index.html
-        run: |
-          cp dist/index.html dist/cpa-admin-${{ steps.get_version.outputs.VERSION }}.html
-
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -50,19 +46,17 @@ jobs:
             ## CPA Admin ${{ steps.get_version.outputs.VERSION }}
 
             ### 📦 下载
-            - `cpa-admin-${{ steps.get_version.outputs.VERSION }}.html` - 单文件版本，可直接在浏览器中打开使用
+            - `index.html` - 单文件版本，可直接在浏览器中打开使用
 
             ### 🚀 使用方法
-            1. 下载 `cpa-admin-*.html` 文件
+            1. 下载 `index.html` 文件
             2. 在浏览器中打开该文件
             3. 输入 CLI Proxy API 服务器地址和管理密钥
             4. 开始管理您的 API 代理服务
 
             ### 📝 更新日志
             请查看 [CHANGELOG](https://github.com/k0ngk0ng/cpa-admin/blob/main/CHANGELOG.md) 了解详细更新内容。
-          files: |
-            dist/index.html
-            dist/cpa-admin-${{ steps.get_version.outputs.VERSION }}.html
+          files: dist/index.html
           draft: false
           prerelease: false
         env:
