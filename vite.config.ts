@@ -2,20 +2,34 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import path from 'path';
-import fs from 'fs';
+import { execSync } from 'child_process';
 
 function getVersion(): string {
+  // 优先使用环境变量
   if (process.env.VERSION) {
     return process.env.VERSION;
   }
+
   try {
-    const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf8'));
-    if (pkg.version && pkg.version !== '0.0.0') {
-      return pkg.version;
+    // 尝试获取 git tag
+    const tag = execSync('git describe --tags --exact-match 2>/dev/null', { encoding: 'utf8' }).trim();
+    if (tag) {
+      return tag;
     }
   } catch {
-    // package.json not readable
+    // 没有 tag，继续尝试获取 commit
   }
+
+  try {
+    // 获取短 commit hash
+    const commit = execSync('git rev-parse --short HEAD 2>/dev/null', { encoding: 'utf8' }).trim();
+    if (commit) {
+      return commit;
+    }
+  } catch {
+    // git 不可用
+  }
+
   return 'dev';
 }
 
