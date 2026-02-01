@@ -43,7 +43,10 @@
     "custom_headers_key_placeholder": "Header 名称，例如 X-Custom-Header",
     "custom_headers_value_placeholder": "Header 值",
     "model_name_placeholder": "模型名称，例如 claude-3-5-sonnet-20241022",
-    "model_alias_placeholder": "模型别名 (可选)"
+    "model_alias_placeholder": "模型别名 (可选)",
+    "export": "导出",
+    "import": "导入",
+    "clear": "清空"
   },
   "title": {
     "main": "CLI Proxy API Management Center",
