@@ -1,0 +1,97 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Rename index.html
+        run: |
+          cp dist/index.html dist/cpa-admin-${{ steps.get_version.outputs.VERSION }}.html
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## CPA Admin ${{ steps.get_version.outputs.VERSION }}
+
+            ### 📦 下载
+            - `cpa-admin-${{ steps.get_version.outputs.VERSION }}.html` - 单文件版本，可直接在浏览器中打开使用
+
+            ### 🚀 使用方法
+            1. 下载 `cpa-admin-*.html` 文件
+            2. 在浏览器中打开该文件
+            3. 输入 CLI Proxy API 服务器地址和管理密钥
+            4. 开始管理您的 API 代理服务
+
+            ### 📝 更新日志
+            请查看 [CHANGELOG](https://github.com/k0ngk0ng/cpa-admin/blob/main/CHANGELOG.md) 了解详细更新内容。
+          files: |
+            dist/index.html
+            dist/cpa-admin-${{ steps.get_version.outputs.VERSION }}.html
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
