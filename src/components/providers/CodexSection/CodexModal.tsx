@@ -40,7 +40,7 @@ export function CodexModal({
   useEffect(() => {
     if (!isOpen) return;
     if (initialData) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setForm({
         ...initialData,
         headers: headersToEntries(initialData.headers),
