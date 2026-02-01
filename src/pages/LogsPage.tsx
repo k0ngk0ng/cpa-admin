@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/Card';
@@ -16,9 +16,10 @@ import {
   IconTrash2,
   IconX,
 } from '@/components/ui/icons';
+import { RequestLogs } from '@/components/monitor/RequestLogs';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
 import { useAuthStore, useConfigStore, useNotificationStore } from '@/stores';
-import { logsApi } from '@/services/api/logs';
+import { logsApi, providersApi, authFilesApi } from '@/services/api';
 import { MANAGEMENT_API_PREFIX } from '@/utils/constants';
 import { formatUnixTimestamp } from '@/utils/format';
 import styles from './LogsPage.module.scss';
@@ -367,7 +368,7 @@ const copyToClipboard = async (text: string) => {
   }
 };
 
-type TabType = 'logs' | 'errors';
+type TabType = 'logs' | 'requests' | 'errors';
 
 export function LogsPage() {
   const { t } = useTranslation();
@@ -388,6 +389,12 @@ export function LogsPage() {
   const [errorLogsError, setErrorLogsError] = useState('');
   const [requestLogId, setRequestLogId] = useState<string | null>(null);
   const [requestLogDownloading, setRequestLogDownloading] = useState(false);
+
+  // Request Logs 相关状态
+  const [requestLogsLoading, setRequestLogsLoading] = useState(false);
+  const [providerMap, setProviderMap] = useState<Record<string, string>>({});
+  const [providerTypeMap, setProviderTypeMap] = useState<Record<string, string>>({});
+  const [authIndexMap, setAuthIndexMap] = useState<Record<string, { name: string; type: string; fileName: string }>>({});
 
   const logViewerRef = useRef<HTMLDivElement | null>(null);
   const pendingScrollToBottomRef = useRef(false);
@@ -570,6 +577,107 @@ export function LogsPage() {
     void loadErrorLogs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, connectionStatus, requestLogEnabled]);
+
+  // 加载 Request Logs 所需的 provider 映射数据
+  const loadRequestLogsData = useCallback(async () => {
+    if (connectionStatus !== 'connected') return;
+    setRequestLogsLoading(true);
+    try {
+      const map: Record<string, string> = {};
+      const typeMap: Record<string, string> = {};
+      const authIdxMap: Record<string, { name: string; type: string; fileName: string }> = {};
+
+      const [openaiProviders, geminiKeys, claudeConfigs, codexConfigs, vertexConfigs, authFilesResponse] = await Promise.all([
+        providersApi.getOpenAIProviders().catch(() => []),
+        providersApi.getGeminiKeys().catch(() => []),
+        providersApi.getClaudeConfigs().catch(() => []),
+        providersApi.getCodexConfigs().catch(() => []),
+        providersApi.getVertexConfigs().catch(() => []),
+        authFilesApi.list().catch(() => ({ files: [] })),
+      ]);
+
+      // 处理 OpenAI 兼容提供商
+      openaiProviders.forEach((provider) => {
+        const providerName = provider.headers?.['X-Provider'] || provider.name || 'unknown';
+        const apiKeyEntries = provider.apiKeyEntries || [];
+        apiKeyEntries.forEach((entry) => {
+          const apiKey = entry.apiKey;
+          if (apiKey) {
+            map[apiKey] = providerName;
+            typeMap[apiKey] = 'OpenAI';
+          }
+        });
+        if (provider.name) {
+          map[provider.name] = providerName;
+          typeMap[provider.name] = 'OpenAI';
+        }
+      });
+
+      // 处理 Gemini 提供商
+      geminiKeys.forEach((config) => {
+        const apiKey = config.apiKey;
+        if (apiKey) {
+          const providerName = config.prefix?.trim() || 'Gemini';
+          map[apiKey] = providerName;
+          typeMap[apiKey] = 'Gemini';
+        }
+      });
+
+      // 处理 Claude 提供商
+      claudeConfigs.forEach((config) => {
+        const apiKey = config.apiKey;
+        if (apiKey) {
+          const providerName = config.prefix?.trim() || 'Claude';
+          map[apiKey] = providerName;
+          typeMap[apiKey] = 'Claude';
+        }
+      });
+
+      // 处理 Codex 提供商
+      codexConfigs.forEach((config) => {
+        const apiKey = config.apiKey;
+        if (apiKey) {
+          const providerName = config.prefix?.trim() || 'Codex';
+          map[apiKey] = providerName;
+          typeMap[apiKey] = 'Codex';
+        }
+      });
+
+      // 处理 Vertex 提供商
+      vertexConfigs.forEach((config) => {
+        const apiKey = config.apiKey;
+        if (apiKey) {
+          const providerName = config.prefix?.trim() || 'Vertex';
+          map[apiKey] = providerName;
+          typeMap[apiKey] = 'Vertex';
+        }
+      });
+
+      // 处理 Auth Files
+      const files = authFilesResponse?.files || [];
+      files.forEach((file: any, index: number) => {
+        authIdxMap[String(index)] = {
+          name: file.name || file.fileName || `Auth ${index}`,
+          type: file.type || '',
+          fileName: file.fileName || file.name || '',
+        };
+      });
+
+      setProviderMap(map);
+      setProviderTypeMap(typeMap);
+      setAuthIndexMap(authIdxMap);
+    } catch (err) {
+      console.error('Failed to load request logs data:', err);
+    } finally {
+      setRequestLogsLoading(false);
+    }
+  }, [connectionStatus]);
+
+  useEffect(() => {
+    if (activeTab !== 'requests') return;
+    if (connectionStatus !== 'connected') return;
+    void loadRequestLogsData();
+  }, [activeTab, connectionStatus, loadRequestLogsData]);
 
   useEffect(() => {
     if (!autoRefresh || connectionStatus !== 'connected') {
@@ -766,6 +874,13 @@ export function LogsPage() {
           onClick={() => setActiveTab('logs')}
         >
           {t('logs.log_content')}
+        </button>
+        <button
+          type="button"
+          className={`${styles.tabItem} ${activeTab === 'requests' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('requests')}
+        >
+          {t('logs.request_logs', { defaultValue: 'Request Logs' })}
         </button>
         <button
           type="button"
@@ -997,6 +1112,17 @@ export function LogsPage() {
               <EmptyState title={t('logs.empty_title')} description={t('logs.empty_desc')} />
             )}
           </Card>
+        )}
+
+        {activeTab === 'requests' && (
+          <RequestLogs
+            data={null}
+            loading={requestLogsLoading}
+            providerMap={providerMap}
+            providerTypeMap={providerTypeMap}
+            authIndexMap={authIndexMap}
+            apiFilter=""
+          />
         )}
 
         {activeTab === 'errors' && (
