@@ -97,7 +97,10 @@ const OAUTH_PROVIDER_PRESETS = [
 const OAUTH_PROVIDER_EXCLUDES = new Set(['all', 'unknown', 'empty']);
 const MIN_CARD_PAGE_SIZE = 3;
 const MAX_CARD_PAGE_SIZE = 30;
+const MAX_SHOW_ALL_THRESHOLD = 50;
 const MAX_AUTH_FILE_SIZE = 50 * 1024;
+
+type ViewMode = 'paged' | 'all';
 
 const clampCardPageSize = (value: number) =>
   Math.min(MAX_CARD_PAGE_SIZE, Math.max(MIN_CARD_PAGE_SIZE, Math.round(value)));
@@ -206,6 +209,8 @@ export function AuthFilesPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(9);
   const [pageSizeInput, setPageSizeInput] = useState('9');
+  const [viewMode, setViewMode] = useState<ViewMode>('paged');
+  const [showTooManyWarning, setShowTooManyWarning] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [deletingAll, setDeletingAll] = useState(false);
@@ -607,11 +612,23 @@ export function AuthFilesPage() {
     });
   }, [files, filter, search]);
 
+  // View mode logic
+  const showAllAllowed = filtered.length <= MAX_SHOW_ALL_THRESHOLD;
+  const effectiveViewMode: ViewMode = viewMode === 'all' && !showAllAllowed ? 'paged' : viewMode;
+
+  // Reset to paged mode if too many files
+  useEffect(() => {
+    if (!showAllAllowed && viewMode === 'all') {
+      setViewMode('paged');
+      setShowTooManyWarning(true);
+    }
+  }, [showAllAllowed, viewMode]);
+
   // 分页计算
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const totalPages = effectiveViewMode === 'all' ? 1 : Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
-  const start = (currentPage - 1) * pageSize;
-  const pageItems = filtered.slice(start, start + pageSize);
+  const start = effectiveViewMode === 'all' ? 0 : (currentPage - 1) * pageSize;
+  const pageItems = effectiveViewMode === 'all' ? filtered : filtered.slice(start, start + pageSize);
 
   // 点击上传
   const handleUploadClick = () => {
@@ -1495,6 +1512,28 @@ export function AuthFilesPage() {
         title={titleNode}
         extra={
           <div className={styles.headerActions}>
+            <div className={styles.viewModeToggle}>
+              <Button
+                variant={effectiveViewMode === 'paged' ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => setViewMode('paged')}
+              >
+                {t('auth_files.view_mode_paged')}
+              </Button>
+              <Button
+                variant={effectiveViewMode === 'all' ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => {
+                  if (filtered.length > MAX_SHOW_ALL_THRESHOLD) {
+                    setShowTooManyWarning(true);
+                  } else {
+                    setViewMode('all');
+                  }
+                }}
+              >
+                {t('auth_files.view_mode_all')}
+              </Button>
+            </div>
             <Button variant="secondary" size="sm" onClick={handleHeaderRefresh} disabled={loading}>
               {t('common.refresh')}
             </Button>
@@ -1580,7 +1619,7 @@ export function AuthFilesPage() {
         )}
 
         {/* 分页 */}
-        {!loading && filtered.length > pageSize && (
+        {!loading && filtered.length > pageSize && effectiveViewMode === 'paged' && (
           <div className={styles.pagination}>
             <Button
               variant="secondary"
@@ -2083,6 +2122,18 @@ export function AuthFilesPage() {
           <div className={styles.hint}>{t('oauth_model_mappings.mappings_hint')}</div>
         </div>
       </Modal>
+
+      {/* Too many files warning modal */}
+      {showTooManyWarning && (
+        <div className={styles.warningOverlay} onClick={() => setShowTooManyWarning(false)}>
+          <div className={styles.warningModal} onClick={(e) => e.stopPropagation()}>
+            <p>{t('auth_files.too_many_files_warning')}</p>
+            <Button variant="primary" size="sm" onClick={() => setShowTooManyWarning(false)}>
+              {t('common.confirm')}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

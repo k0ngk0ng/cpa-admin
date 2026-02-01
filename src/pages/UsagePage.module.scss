@@ -355,6 +355,13 @@
   word-break: break-all;
 }
 
+.apiEndpointOriginal {
+  font-weight: 400;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  margin-left: 6px;
+}
+
 .apiStats {
   display: flex;
   flex-wrap: wrap;

@@ -54,7 +54,7 @@ export function StatCards({ usage, loading, modelPrices, sparklines }: StatCards
   const statsCards: StatCardData[] = [
     {
       key: 'requests',
-      label: t('usage_stats.total_requests'),
+      label: t('usage_stats.all_time_requests', { defaultValue: 'All-Time Requests' }),
       icon: <IconSatellite size={16} />,
       accent: '#3b82f6',
       accentSoft: 'rgba(59, 130, 246, 0.18)',
@@ -76,7 +76,7 @@ export function StatCards({ usage, loading, modelPrices, sparklines }: StatCards
     },
     {
       key: 'tokens',
-      label: t('usage_stats.total_tokens'),
+      label: t('usage_stats.all_time_tokens', { defaultValue: 'All-Time Tokens' }),
       icon: <IconDiamond size={16} />,
       accent: '#8b5cf6',
       accentSoft: 'rgba(139, 92, 246, 0.18)',
@@ -104,7 +104,7 @@ export function StatCards({ usage, loading, modelPrices, sparklines }: StatCards
       value: loading ? '-' : formatPerMinuteValue(rateStats.rpm),
       meta: (
         <span className={styles.statMetaItem}>
-          {t('usage_stats.total_requests')}: {loading ? '-' : rateStats.requestCount.toLocaleString()}
+          {t('usage_stats.recent_requests', { defaultValue: 'Recent 30m' })}: {loading ? '-' : rateStats.requestCount.toLocaleString()}
         </span>
       ),
       trend: sparklines.rpm
@@ -119,7 +119,7 @@ export function StatCards({ usage, loading, modelPrices, sparklines }: StatCards
       value: loading ? '-' : formatPerMinuteValue(rateStats.tpm),
       meta: (
         <span className={styles.statMetaItem}>
-          {t('usage_stats.total_tokens')}: {loading ? '-' : formatTokensInMillions(rateStats.tokenCount)}
+          {t('usage_stats.recent_tokens', { defaultValue: 'Recent 30m' })}: {loading ? '-' : formatTokensInMillions(rateStats.tokenCount)}
         </span>
       ),
       trend: sparklines.tpm
@@ -135,7 +135,7 @@ export function StatCards({ usage, loading, modelPrices, sparklines }: StatCards
       meta: (
         <>
           <span className={styles.statMetaItem}>
-            {t('usage_stats.total_tokens')}: {loading ? '-' : formatTokensInMillions(usage?.total_tokens ?? 0)}
+            {t('usage_stats.all_time_tokens', { defaultValue: 'All-Time Tokens' })}: {loading ? '-' : formatTokensInMillions(usage?.total_tokens ?? 0)}
           </span>
           {!hasPrices && (
             <span className={`${styles.statMetaItem} ${styles.statSubtle}`}>

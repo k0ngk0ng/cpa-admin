@@ -10,6 +10,7 @@ import { UsagePage } from '@/pages/UsagePage';
 import { ConfigPage } from '@/pages/ConfigPage';
 import { LogsPage } from '@/pages/LogsPage';
 import { ModelsPage } from '@/pages/ModelsPage';
+import { LocalDataPage } from '@/pages/LocalDataPage';
 import { AboutPage } from '@/pages/AboutPage';
 
 const mainRoutes = [
@@ -18,13 +19,14 @@ const mainRoutes = [
   { path: '/settings', element: <SettingsPage /> },
   { path: '/api-keys', element: <ApiKeysPage /> },
   { path: '/ai-providers', element: <AiProvidersPage /> },
+  { path: '/models', element: <ModelsPage /> },
   { path: '/auth-files', element: <AuthFilesPage /> },
   { path: '/oauth', element: <OAuthPage /> },
   { path: '/quota', element: <QuotaPage /> },
   { path: '/usage', element: <UsagePage /> },
   { path: '/config', element: <ConfigPage /> },
   { path: '/logs', element: <LogsPage /> },
-  { path: '/models', element: <ModelsPage /> },
+  { path: '/local-data', element: <LocalDataPage /> },
   { path: '/about', element: <AboutPage /> },
   // Redirect old routes
   { path: '/system', element: <Navigate to="/about" replace /> },

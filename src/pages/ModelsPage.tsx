@@ -16,6 +16,7 @@ import styles from './ModelsPage.module.scss';
 // 预设的常用模型价格 ($/1M tokens)
 const DEFAULT_MODEL_PRICES: Record<string, { prompt: number; completion: number; cache: number }> = {
   // Claude 模型
+  'claude-opus-4-20250514': { prompt: 15.0, completion: 75.0, cache: 1.50 },
   'claude-sonnet-4-20250514': { prompt: 3.0, completion: 15.0, cache: 0.30 },
   'claude-3-7-sonnet-20250219': { prompt: 3.0, completion: 15.0, cache: 0.30 },
   'claude-3-5-sonnet-20241022': { prompt: 3.0, completion: 15.0, cache: 0.30 },

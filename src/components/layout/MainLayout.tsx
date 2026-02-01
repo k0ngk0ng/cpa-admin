@@ -17,6 +17,7 @@ import { MainRoutes } from '@/router/MainRoutes';
 import {
   IconBot,
   IconChartLine,
+  IconDownload,
   IconFileText,
   IconInfo,
   IconKey,
@@ -51,6 +52,7 @@ const sidebarIcons: Record<string, ReactNode> = {
   config: <IconSettings size={18} />,
   logs: <IconScrollText size={18} />,
   models: <IconCube size={18} />,
+  localData: <IconDownload size={18} />,
   about: <IconInfo size={18} />,
 };
 
@@ -362,6 +364,7 @@ export function MainLayout() {
     { path: '/settings', label: t('nav.basic_settings'), icon: sidebarIcons.settings },
     { path: '/api-keys', label: t('nav.api_keys'), icon: sidebarIcons.apiKeys },
     { path: '/ai-providers', label: t('nav.ai_providers'), icon: sidebarIcons.aiProviders },
+    { path: '/models', label: t('nav.models', { defaultValue: 'API Models' }), icon: sidebarIcons.models },
     { path: '/auth-files', label: t('nav.auth_files'), icon: sidebarIcons.authFiles },
     { path: '/oauth', label: t('nav.oauth', { defaultValue: 'OAuth' }), icon: sidebarIcons.oauth },
     { path: '/quota', label: t('nav.quota_management'), icon: sidebarIcons.quota },
@@ -370,7 +373,7 @@ export function MainLayout() {
     ...(config?.loggingToFile
       ? [{ path: '/logs', label: t('nav.logs'), icon: sidebarIcons.logs }]
       : []),
-    { path: '/models', label: t('nav.models', { defaultValue: 'API Models' }), icon: sidebarIcons.models },
+    { path: '/local-data', label: t('nav.local_data', { defaultValue: 'Local Data' }), icon: sidebarIcons.localData },
     { path: '/about', label: t('nav.about', { defaultValue: 'About' }), icon: sidebarIcons.about },
   ];
   const navOrder = navItems.map((item) => item.path);

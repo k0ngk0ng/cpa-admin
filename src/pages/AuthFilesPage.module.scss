@@ -30,6 +30,20 @@
   display: flex;
   gap: $spacing-sm;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.viewModeToggle {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-tertiary);
+  padding: 2px;
+  border-radius: $radius-md;
+  margin-right: $spacing-sm;
+
+  button {
+    border-radius: calc($radius-md - 2px);
+  }
 }
 
 .titleWrapper {
@@ -994,4 +1008,36 @@
   border-radius: 8px;
   border: 1px solid var(--danger-color);
   flex-shrink: 0;
+}
+
+// Warning overlay for too many files
+.warningOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.warningModal {
+  background-color: var(--bg-primary);
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: $shadow-xl;
+  text-align: center;
+
+  p {
+    margin: 0 0 $spacing-lg 0;
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.6;
+  }
 }

@@ -36,10 +36,6 @@ export function ApiKeysPage() {
   const [aliasValue, setAliasValue] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // Alias editing state
-  const [editingAliasKey, setEditingAliasKey] = useState<string | null>(null);
-  const [editingAliasValue, setEditingAliasValue] = useState('');
-
   const disableControls = useMemo(() => connectionStatus !== 'connected', [connectionStatus]);
 
   const loadApiKeys = useCallback(
@@ -187,39 +183,6 @@ export function ApiKeysPage() {
     });
   };
 
-  // Inline alias editing
-  const startEditAlias = (apiKey: string) => {
-    setEditingAliasKey(apiKey);
-    setEditingAliasValue(aliases[apiKey] || '');
-  };
-
-  const saveEditAlias = () => {
-    if (editingAliasKey) {
-      const trimmed = editingAliasValue.trim();
-      if (trimmed) {
-        setAlias(editingAliasKey, trimmed);
-      } else {
-        removeAlias(editingAliasKey);
-      }
-      showNotification(t('notification.saved'), 'success');
-    }
-    setEditingAliasKey(null);
-    setEditingAliasValue('');
-  };
-
-  const cancelEditAlias = () => {
-    setEditingAliasKey(null);
-    setEditingAliasValue('');
-  };
-
-  const handleAliasKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      saveEditAlias();
-    } else if (e.key === 'Escape') {
-      cancelEditAlias();
-    }
-  };
-
   // Export/Import aliases
   const handleExportAliases = () => {
     const data = {
@@ -265,23 +228,18 @@ export function ApiKeysPage() {
   };
 
   const actionButtons = (
-    <div style={{ display: 'flex', gap: 8 }}>
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <Button variant="secondary" size="sm" onClick={handleExportAliases} title={t('api_keys.export_aliases', { defaultValue: 'Export Aliases' })}>
+        {t('common.export')}
+      </Button>
+      <Button variant="secondary" size="sm" onClick={handleImportAliases} title={t('api_keys.import_aliases', { defaultValue: 'Import Aliases' })}>
+        {t('common.import')}
+      </Button>
       <Button variant="secondary" size="sm" onClick={() => loadApiKeys(true)} disabled={loading}>
         {t('common.refresh')}
       </Button>
       <Button size="sm" onClick={openAddModal} disabled={disableControls}>
         {t('api_keys.add_button')}
-      </Button>
-    </div>
-  );
-
-  const aliasActionButtons = (
-    <div style={{ display: 'flex', gap: 8 }}>
-      <Button variant="secondary" size="sm" onClick={handleExportAliases}>
-        {t('common.export')}
-      </Button>
-      <Button variant="secondary" size="sm" onClick={handleImportAliases}>
-        {t('common.import')}
       </Button>
     </div>
   );
@@ -385,69 +343,6 @@ export function ApiKeysPage() {
               />
             </div>
           </Modal>
-        </Card>
-
-        {/* API Key Aliases Card */}
-        <Card
-          title={t('api_keys.alias_title', { defaultValue: 'API Key Aliases' })}
-          subtitle={t('api_keys.alias_subtitle', { defaultValue: 'Set friendly names for your API keys (stored locally)' })}
-          extra={aliasActionButtons}
-        >
-          {apiKeys.length === 0 ? (
-            <div className="hint">{t('api_keys.alias_empty', { defaultValue: 'No API keys configured yet' })}</div>
-          ) : (
-            <div className={styles.aliasList}>
-              {apiKeys.map((apiKey) => {
-                const alias = aliases[apiKey];
-                const isEditing = editingAliasKey === apiKey;
-
-                return (
-                  <div key={apiKey} className={styles.aliasItem}>
-                    <div className={styles.aliasKeyInfo}>
-                      <span className={styles.aliasKey} title={apiKey}>
-                        {maskApiKey(apiKey)}
-                      </span>
-                      {alias && !isEditing && (
-                        <span className={styles.aliasValue}>→ {alias}</span>
-                      )}
-                    </div>
-                    <div className={styles.aliasActions}>
-                      {isEditing ? (
-                        <>
-                          <input
-                            type="text"
-                            className={styles.aliasInput}
-                            value={editingAliasValue}
-                            onChange={(e) => setEditingAliasValue(e.target.value)}
-                            onKeyDown={handleAliasKeyDown}
-                            placeholder={t('api_keys.alias_placeholder', { defaultValue: 'Enter alias' })}
-                            autoFocus
-                          />
-                          <Button size="sm" onClick={saveEditAlias}>
-                            {t('common.save')}
-                          </Button>
-                          <Button size="sm" variant="secondary" onClick={cancelEditAlias}>
-                            {t('common.cancel')}
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button size="sm" variant="secondary" onClick={() => startEditAlias(apiKey)}>
-                            {alias ? t('common.edit') : t('api_keys.set_alias', { defaultValue: 'Set Alias' })}
-                          </Button>
-                          {alias && (
-                            <Button size="sm" variant="danger" onClick={() => removeAlias(apiKey)}>
-                              {t('common.delete')}
-                            </Button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </Card>
       </div>
     </div>
