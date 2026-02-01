@@ -24,9 +24,9 @@ const DEFAULT_MODEL_PRICES: Record<string, { prompt: number; completion: number;
   'claude-3-5-haiku-20241022': { prompt: 0.80, completion: 4.0, cache: 0.08 },
   'claude-3-opus-20240229': { prompt: 15.0, completion: 75.0, cache: 1.50 },
   'claude-3-haiku-20240307': { prompt: 0.25, completion: 1.25, cache: 0.03 },
-  // Claude Opus 4.5 (假设价格，实际以官方为准)
-  'claude-opus-4.5': { prompt: 15.0, completion: 75.0, cache: 1.50 },
-  'claude-3-5-opus': { prompt: 15.0, completion: 75.0, cache: 1.50 },
+  // Claude Opus 4.5
+  'claude-opus-4.5': { prompt: 5.0, completion: 25.0, cache: 0.50 },
+  'claude-3-5-opus': { prompt: 5.0, completion: 25.0, cache: 0.50 },
   // GPT 模型
   'gpt-4o': { prompt: 2.50, completion: 10.0, cache: 1.25 },
   'gpt-4o-mini': { prompt: 0.15, completion: 0.60, cache: 0.075 },
