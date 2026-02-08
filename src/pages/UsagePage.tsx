@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
-import { useThemeStore } from '@/stores';
+import { useThemeStore, useModelsStore } from '@/stores';
 import {
   StatCards,
   UsageChart,
@@ -38,7 +38,7 @@ import { HourlyTokenChart } from '@/components/monitor/HourlyTokenChart';
 import { SourceStats } from '@/components/monitor/ChannelStats';
 import { ApiStats } from '@/components/monitor/ApiStats';
 import { FailureAnalysis } from '@/components/monitor/FailureAnalysis';
-import { getModelNamesFromUsage, getApiStats, getModelStats } from '@/utils/usage';
+import { getModelNamesFromUsage, getApiStats, getModelStats, resolveModelPrices } from '@/utils/usage';
 import { providersApi, authFilesApi } from '@/services/api';
 import type { UsageData, UsageDetail } from '@/types/usage';
 import styles from './UsagePage.module.scss';
@@ -82,6 +82,18 @@ export function UsagePage() {
     exporting,
     importing
   } = useUsageData();
+
+  // 从 models store 构建 alias → name 映射，用于价格解析
+  const models = useModelsStore((state) => state.models);
+  const resolvedPrices = useMemo(() => {
+    const aliasMap: Record<string, string> = {};
+    models.forEach((m) => {
+      if (m.alias && m.name && m.alias !== m.name) {
+        aliasMap[m.alias] = m.name;
+      }
+    });
+    return resolveModelPrices(modelPrices, aliasMap);
+  }, [modelPrices, models]);
 
   useHeaderRefresh(loadUsage);
 
@@ -273,9 +285,9 @@ export function UsagePage() {
 
   // Derived data
   const modelNames = useMemo(() => getModelNamesFromUsage(usage), [usage]);
-  const apiStats = useMemo(() => getApiStats(usage, modelPrices), [usage, modelPrices]);
-  const modelStats = useMemo(() => getModelStats(usage, modelPrices), [usage, modelPrices]);
-  const hasPrices = Object.keys(modelPrices).length > 0;
+  const apiStats = useMemo(() => getApiStats(usage, resolvedPrices), [usage, resolvedPrices]);
+  const modelStats = useMemo(() => getModelStats(usage, resolvedPrices), [usage, resolvedPrices]);
+  const hasPrices = Object.keys(resolvedPrices).length > 0;
 
   // 根据时间范围过滤数据（用于 Monitor 组件）
   const filteredData = useMemo(() => {
@@ -400,7 +412,7 @@ export function UsagePage() {
       <StatCards
         usage={usage}
         loading={loading}
-        modelPrices={modelPrices}
+        modelPrices={resolvedPrices}
         sparklines={{
           requests: requestsSparkline,
           tokens: tokensSparkline,

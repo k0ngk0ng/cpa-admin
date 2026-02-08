@@ -532,6 +532,47 @@ export function saveModelPrices(prices: Record<string, ModelPrice>): void {
 }
 
 /**
+ * 根据 alias ↔ name 映射扩展价格表
+ * 确保无论 usage 数据中记录的是原始名称还是别称，都能匹配到价格
+ *
+ * @param prices 用户设置的模型价格
+ * @param aliasMap alias → originalName 的映射（从 models 列表构建）
+ * @returns 扩展后的价格表（已有的不会被覆盖）
+ */
+export function resolveModelPrices(
+  prices: Record<string, ModelPrice>,
+  aliasMap: Record<string, string>
+): Record<string, ModelPrice> {
+  if (!Object.keys(aliasMap).length) {
+    return prices;
+  }
+
+  const resolved = { ...prices };
+
+  // 构建反向映射 name → alias
+  const nameToAlias: Record<string, string> = {};
+  Object.entries(aliasMap).forEach(([alias, name]) => {
+    nameToAlias[name] = alias;
+  });
+
+  Object.entries(prices).forEach(([key, price]) => {
+    // 如果 key 是别称，把价格也映射到原始名称
+    const originalName = aliasMap[key];
+    if (originalName && !resolved[originalName]) {
+      resolved[originalName] = price;
+    }
+
+    // 如果 key 是原始名称，把价格也映射到别称
+    const alias = nameToAlias[key];
+    if (alias && !resolved[alias]) {
+      resolved[alias] = price;
+    }
+  });
+
+  return resolved;
+}
+
+/**
  * 获取 API 统计数据
  */
 export function getApiStats(usageData: any, modelPrices: Record<string, ModelPrice>): ApiStats[] {

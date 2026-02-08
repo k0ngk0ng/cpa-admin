@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { useAuthStore, useConfigStore, useNotificationStore, useModelsStore } from '@/stores';
 import { apiKeysApi } from '@/services/api/apiKeys';
 import { classifyModels } from '@/utils/models';
+import { loadModelPrices, saveModelPrices, type ModelPrice } from '@/utils/usage';
 import styles from './ModelsPage.module.scss';
 
 // 预设的常用模型价格 ($/1M tokens)
@@ -52,34 +53,6 @@ const DEFAULT_MODEL_PRICES: Record<string, { prompt: number; completion: number;
   'qwen-turbo': { prompt: 0.30, completion: 0.60, cache: 0.075 },
 };
 
-export interface ModelPrice {
-  prompt: number;
-  completion: number;
-  cache: number;
-}
-
-const STORAGE_KEY = 'cpamc-model-prices';
-
-const loadModelPrices = (): Record<string, ModelPrice> => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch {
-    // ignore
-  }
-  return {};
-};
-
-const saveModelPrices = (prices: Record<string, ModelPrice>) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(prices));
-  } catch {
-    // ignore
-  }
-};
-
 export function ModelsPage() {
   const { t, i18n } = useTranslation();
   const { showNotification, showConfirmation } = useNotificationStore();
@@ -106,6 +79,19 @@ export function ModelsPage() {
   );
   const groupedModels = useMemo(() => classifyModels(models, { otherLabel }), [models, otherLabel]);
 
+  // 构建 alias ↔ name 双向映射
+  const { aliasToName, nameToAlias } = useMemo(() => {
+    const a2n: Record<string, string> = {};
+    const n2a: Record<string, string> = {};
+    models.forEach((m) => {
+      if (m.alias && m.name && m.alias !== m.name) {
+        a2n[m.alias] = m.name;
+        n2a[m.name] = m.alias;
+      }
+    });
+    return { aliasToName: a2n, nameToAlias: n2a };
+  }, [models]);
+
   // 获取所有模型名称（用于价格设置）
   const allModelNames = useMemo(() => {
     const names = new Set<string>();
@@ -119,6 +105,21 @@ export function ModelsPage() {
     Object.keys(modelPrices).forEach((name) => names.add(name));
     return Array.from(names).sort();
   }, [models, modelPrices]);
+
+  // 为下拉框生成显示标签：如果是别称则标注原始名称，如果是原始名称则标注别称
+  const getModelDisplayLabel = useCallback((name: string): string => {
+    const originalName = aliasToName[name];
+    if (originalName) {
+      // 这是一个别称，显示对应的原始名称
+      return `${name}  ← ${originalName}`;
+    }
+    const alias = nameToAlias[name];
+    if (alias) {
+      // 这是一个原始名称，显示对应的别称
+      return `${name}  → ${alias}`;
+    }
+    return name;
+  }, [aliasToName, nameToAlias]);
 
   const normalizeApiKeyList = (input: any): string[] => {
     if (!Array.isArray(input)) return [];
@@ -400,7 +401,7 @@ export function ModelsPage() {
                   <option value="">{t('usage_stats.model_price_select_placeholder')}</option>
                   {allModelNames.map((name) => (
                     <option key={name} value={name}>
-                      {name}
+                      {getModelDisplayLabel(name)}
                     </option>
                   ))}
                 </select>
@@ -449,7 +450,15 @@ export function ModelsPage() {
                 {Object.entries(modelPrices).map(([model, price]) => (
                   <div key={model} className={styles.priceItem}>
                     <div className={styles.priceInfo}>
-                      <span className={styles.priceModel}>{model}</span>
+                      <span className={styles.priceModel}>
+                        {model}
+                        {aliasToName[model] && (
+                          <span className={styles.priceModelHint}> ← {aliasToName[model]}</span>
+                        )}
+                        {nameToAlias[model] && (
+                          <span className={styles.priceModelHint}> → {nameToAlias[model]}</span>
+                        )}
+                      </span>
                       <div className={styles.priceMeta}>
                         <span>
                           {t('usage_stats.model_price_prompt')}: ${price.prompt.toFixed(4)}/1M

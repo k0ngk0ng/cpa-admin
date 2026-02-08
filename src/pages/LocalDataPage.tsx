@@ -14,7 +14,7 @@ const LOCAL_STORAGE_KEYS = [
   'cpamc-theme',
   'cpamc-language',
   'cpamc-api-key-aliases',
-  'cpamc-model-prices',
+  'cli-proxy-model-prices-v2',
   'cpamc-disabled-models',
 ];
 
@@ -22,7 +22,7 @@ const STORAGE_KEY_DESCRIPTIONS: Record<string, string> = {
   'cpamc-theme': 'Theme settings (light/dark/auto)',
   'cpamc-language': 'Language preference',
   'cpamc-api-key-aliases': 'API Key friendly names',
-  'cpamc-model-prices': 'Model pricing configuration',
+  'cli-proxy-model-prices-v2': 'Model pricing configuration',
   'cpamc-disabled-models': 'Disabled models list',
 };
 

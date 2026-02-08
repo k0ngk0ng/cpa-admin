@@ -195,6 +195,13 @@
   font-size: 0.875rem;
 }
 
+.priceModelHint {
+  font-weight: 400;
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}
+
 .priceMeta {
   display: flex;
   gap: 1rem;
