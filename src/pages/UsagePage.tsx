@@ -83,17 +83,21 @@ export function UsagePage() {
     importing
   } = useUsageData();
 
-  // 从 models store 构建 alias → name 映射，用于价格解析
+  // 从 models store 和 Provider 配置构建 alias → name 映射，用于价格解析
   const models = useModelsStore((state) => state.models);
+  const [providerAliasMap, setProviderAliasMap] = useState<Record<string, string>>({});
   const resolvedPrices = useMemo(() => {
     const aliasMap: Record<string, string> = {};
+    // 从 /v1/models 返回的数据中提取
     models.forEach((m) => {
       if (m.alias && m.name && m.alias !== m.name) {
         aliasMap[m.alias] = m.name;
       }
     });
+    // 合并 Provider 配置中的映射
+    Object.assign(aliasMap, providerAliasMap);
     return resolveModelPrices(modelPrices, aliasMap);
-  }, [modelPrices, models]);
+  }, [modelPrices, models, providerAliasMap]);
 
   useHeaderRefresh(loadUsage);
 
@@ -115,6 +119,7 @@ export function UsagePage() {
       const modelsMap: Record<string, Set<string>> = {};
       const typeMap: Record<string, string> = {};
       const authIdxMap: Record<string, { name: string; type: string; fileName: string }> = {};
+      const aliasMap: Record<string, string> = {};
 
       const [openaiProviders, geminiKeys, claudeConfigs, codexConfigs, vertexConfigs, authFilesResponse] = await Promise.all([
         providersApi.getOpenAIProviders().catch(() => []),
@@ -132,6 +137,9 @@ export function UsagePage() {
         (provider.models || []).forEach((m) => {
           if (m.alias) modelSet.add(m.alias);
           if (m.name) modelSet.add(m.name);
+          if (m.alias && m.name && m.alias !== m.name) {
+            aliasMap[m.alias] = m.name;
+          }
         });
         const apiKeyEntries = provider.apiKeyEntries || [];
         apiKeyEntries.forEach((entry) => {
@@ -171,6 +179,9 @@ export function UsagePage() {
             config.models.forEach((m) => {
               if (m.alias) modelSet.add(m.alias);
               if (m.name) modelSet.add(m.name);
+              if (m.alias && m.name && m.alias !== m.name) {
+                aliasMap[m.alias] = m.name;
+              }
             });
             modelsMap[apiKey] = modelSet;
           }
@@ -189,6 +200,9 @@ export function UsagePage() {
             config.models.forEach((m) => {
               if (m.alias) modelSet.add(m.alias);
               if (m.name) modelSet.add(m.name);
+              if (m.alias && m.name && m.alias !== m.name) {
+                aliasMap[m.alias] = m.name;
+              }
             });
             modelsMap[apiKey] = modelSet;
           }
@@ -207,6 +221,9 @@ export function UsagePage() {
             config.models.forEach((m) => {
               if (m.alias) modelSet.add(m.alias);
               if (m.name) modelSet.add(m.name);
+              if (m.alias && m.name && m.alias !== m.name) {
+                aliasMap[m.alias] = m.name;
+              }
             });
             modelsMap[apiKey] = modelSet;
           }
@@ -252,6 +269,7 @@ export function UsagePage() {
       setProviderModels(modelsMap);
       setProviderTypeMap(typeMap);
       setAuthIndexMap(authIdxMap);
+      setProviderAliasMap(aliasMap);
     } catch (err) {
       console.warn('Usage: Failed to load provider map:', err);
     }

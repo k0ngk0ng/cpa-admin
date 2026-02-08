@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useAuthStore, useConfigStore, useNotificationStore, useModelsStore } from '@/stores';
 import { apiKeysApi } from '@/services/api/apiKeys';
+import { providersApi } from '@/services/api';
 import { classifyModels } from '@/utils/models';
 import { loadModelPrices, saveModelPrices, type ModelPrice } from '@/utils/usage';
 import styles from './ModelsPage.module.scss';
@@ -79,18 +80,56 @@ export function ModelsPage() {
   );
   const groupedModels = useMemo(() => classifyModels(models, { otherLabel }), [models, otherLabel]);
 
-  // 构建 alias ↔ name 双向映射
-  const { aliasToName, nameToAlias } = useMemo(() => {
-    const a2n: Record<string, string> = {};
-    const n2a: Record<string, string> = {};
-    models.forEach((m) => {
-      if (m.alias && m.name && m.alias !== m.name) {
-        a2n[m.alias] = m.name;
-        n2a[m.name] = m.alias;
+  // 从 Provider 配置中构建 alias ↔ name 双向映射
+  // Provider 中 models[].name 是原始名称，models[].alias 是别称
+  const [providerAliasMap, setProviderAliasMap] = useState<{ aliasToName: Record<string, string>; nameToAlias: Record<string, string> }>({ aliasToName: {}, nameToAlias: {} });
+
+  useEffect(() => {
+    const loadProviderAliases = async () => {
+      const a2n: Record<string, string> = {};
+      const n2a: Record<string, string> = {};
+
+      // 先从 /v1/models 返回的数据中提取
+      models.forEach((m) => {
+        if (m.alias && m.name && m.alias !== m.name) {
+          a2n[m.alias] = m.name;
+          n2a[m.name] = m.alias;
+        }
+      });
+
+      // 再从所有 Provider 配置中提取模型映射
+      try {
+        const [openaiProviders, claudeConfigs, codexConfigs, vertexConfigs] = await Promise.all([
+          providersApi.getOpenAIProviders().catch(() => []),
+          providersApi.getClaudeConfigs().catch(() => []),
+          providersApi.getCodexConfigs().catch(() => []),
+          providersApi.getVertexConfigs().catch(() => []),
+        ]);
+
+        const collectFromModels = (modelsList: Array<{ name: string; alias?: string }>) => {
+          (modelsList || []).forEach((m) => {
+            if (m.alias && m.name && m.alias !== m.name) {
+              a2n[m.alias] = m.name;
+              n2a[m.name] = m.alias;
+            }
+          });
+        };
+
+        openaiProviders.forEach((p) => collectFromModels(p.models || []));
+        claudeConfigs.forEach((c) => collectFromModels(c.models || []));
+        codexConfigs.forEach((c) => collectFromModels(c.models || []));
+        vertexConfigs.forEach((c) => collectFromModels(c.models || []));
+      } catch {
+        // ignore — 使用已有的映射
       }
-    });
-    return { aliasToName: a2n, nameToAlias: n2a };
+
+      setProviderAliasMap({ aliasToName: a2n, nameToAlias: n2a });
+    };
+
+    loadProviderAliases();
   }, [models]);
+
+  const { aliasToName, nameToAlias } = providerAliasMap;
 
   // 获取所有模型名称（用于价格设置）
   const allModelNames = useMemo(() => {
@@ -99,12 +138,17 @@ export function ModelsPage() {
       if (m.name) names.add(m.name);
       if (m.alias) names.add(m.alias);
     });
+    // 添加 Provider 配置中的原始名称和别称
+    Object.keys(aliasToName).forEach((alias) => {
+      names.add(alias);
+      names.add(aliasToName[alias]);
+    });
     // 添加预设价格中的模型
     Object.keys(DEFAULT_MODEL_PRICES).forEach((name) => names.add(name));
     // 添加已保存价格中的模型
     Object.keys(modelPrices).forEach((name) => names.add(name));
     return Array.from(names).sort();
-  }, [models, modelPrices]);
+  }, [models, modelPrices, aliasToName]);
 
   // 为下拉框生成显示标签：如果是别称则标注原始名称，如果是原始名称则标注别称
   const getModelDisplayLabel = useCallback((name: string): string => {
